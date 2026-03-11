@@ -93,10 +93,8 @@ class WHU_Dataset(torch.utils.data.Dataset):
         self.sar_cache = LRUCache(cache_size)
 
         if normalize_type == "geo":
-            # self.imagenet_mean = (0.430, 0.411, 0.296)
-            # self.imagenet_std = (0.213, 0.156, 0.143)
-            self.imagenet_mean = (0.485, 0.456, 0.406)
-            self.imagenet_std = (0.229, 0.224, 0.225)
+            self.imagenet_mean = (0.430, 0.411, 0.296)
+            self.imagenet_std = (0.213, 0.156, 0.143)
         elif normalize_type == "common":
             self.imagenet_mean = (0.485, 0.456, 0.406)
             self.imagenet_std = (0.229, 0.224, 0.225)
