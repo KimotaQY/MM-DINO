@@ -1,0 +1,23 @@
+build/
+dist/
+logs/
+*.egg-info/
+**/__pycache__/
+
+**/.ipynb_checkpoints
+**/.ipynb_checkpoints/**
+
+**/notebooks
+
+# Ignore shell scripts
+*.sh
+
+# Ignore swap files
+*.swp
+
+# Ignore vscode directory
+.vscode/
+dinov3/eval/segmentation/models/utils/ops/MultiScaleDeformableAttention.cpython-311-x86_64-linux-gnu.so
+
+# Ignore visual results
+vis_results/
