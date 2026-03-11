@@ -11,8 +11,6 @@ class LinearHead(nn.Module):
     ):
         super().__init__()
 
-        # self.fusion = SEFusion(in_ch)
-
         self.proj = nn.Conv2d(in_ch, n_classes, 1)
         self.up = nn.Upsample(scale_factor=2,
                               mode="bilinear",
