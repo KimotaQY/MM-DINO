@@ -1,1 +1,257 @@
-# MM-DINO
+🆕 [2026-03-11] :fire: MM-DINO are now available.
+
+# MM-DINO 🦖🦖🦖
+[Yuan Qin](https://orcid.org/0009-0005-8953-9006)<sup>1,2</sup>,
+Chanling Pan<sup>1,2</sup>,
+Jinyun Chen<sup>1,2</sup>,
+Ruibo Chen<sup>1,2</sup>,
+Jiaxing Chen<sup>1,2</sup>,
+and Ruichao Qu<sup>1,2</sup>. <br />
+<sup>1</sup> Guangxi Zhuang Autonomous Region Institute of Natural Resources Remote Sensing
+<sup>2</sup> Key Laboratory of China-ASEAN Satellite Remote Sensing Applications, Ministry of Natural Resources
+
+[ :scroll: [`Paper`]()] [ :book: [`BibTeX`]()]
+
+Reference PyTorch implementation and models for MM-DINO. For details, see the **[MM-DINO]()** paper.
+
+## Overview
+
+
+## Pretrained models
+
+### DINOv3 pretrained backbones
+
+:information_source: Please follow the link provided below to get access to all the model weights: once accepted, an e-mail will be sent with the complete list of URLs pointing to all the available model weights (both backbones and adapters). 
+
+ViT models pretrained on web dataset (LVD-1689M):
+<table style="margin: auto">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Parameters</th>
+      <th>Pretraining<br/>Dataset</th>
+      <th>Download</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ViT-S/16 distilled </td>
+      <td align="right">21M</td>
+      <td align="center">LVD-1689M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+    <tr>
+      <td>ViT-S+/16 distilled</td>
+      <td align="right">29M</td>
+      <td align="center">LVD-1689M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+    <tr>
+      <td>ViT-B/16 distilled</td>
+      <td align="right">86M</td>
+      <td align="center">LVD-1689M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+    <tr>
+      <td>ViT-L/16 distilled</td>
+      <td align="right">300M</td>
+      <td align="center">LVD-1689M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+    <tr>
+      <td>ViT-H+/16 distilled</td>
+      <td align="right">840M</td>
+      <td align="center">LVD-1689M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+    <tr>
+      <td>ViT-7B/16</td>
+      <td align="right">6,716M</td>
+      <td align="center">LVD-1689M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+  </tbody>
+</table>
+
+ViT models pretrained on satellite dataset (SAT-493M):
+<table style="margin: auto">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Parameters</th>
+      <th>Pretraining<br/>Dataset</th>
+      <th>Download</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ViT-L/16 distilled</td>
+      <td align="right">300M</td>
+      <td align="center">SAT-493M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+    <tr>
+      <td>ViT-7B/16</td>
+      <td align="right">6,716M</td>
+      <td align="center">SAT-493M</td>
+      <td align="center"><a href="https://ai.meta.com/resources/models-and-libraries/dinov3-downloads/">[link]</a></td>
+    </tr>
+  </tbody>
+</table>
+
+### MM-DINO pretrained weights
+<table style="margin: auto">
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Modality</th>
+      <th>Parameters</th>
+      <th>Dataset</th>
+      <th>Download</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MM-DINO ViT-L/16</td>
+      <td align="right">Uni</td>
+      <td align="right">-</td>
+      <td align="center">Vaihingen</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-L/16</td>
+      <td align="right">Multi</td>
+      <td align="right">-</td>
+      <td align="center">Vaihingen</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-L/16</td>
+      <td align="right">Uni</td>
+      <td align="right">-</td>
+      <td align="center">Potsdam</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-L/16</td>
+      <td align="right">Multi</td>
+      <td align="right">-</td>
+      <td align="center">Potsdam</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-L/16</td>
+      <td align="right">Uni</td>
+      <td align="right">-</td>
+      <td align="center">WHU-OPT-SAR</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-L/16</td>
+      <td align="right">Multi</td>
+      <td align="right">-</td>
+      <td align="center">WHU-OPT-SAR</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-S/16</td>
+      <td align="right">Uni</td>
+      <td align="right">-</td>
+      <td align="center">WHU-OPT-SAR</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-S/16</td>
+      <td align="right">Multi</td>
+      <td align="right">-</td>
+      <td align="center">WHU-OPT-SAR</td>
+      <td align="center"><a href="">[link]</a></td>
+    </tr>
+  </tbody>
+</table>
+
+## Installation
+
+The training and evaluation code requires PyTorch version >= 2.7.1 as well as a few other 3rd party packages. Note that the code has only been tested with the specified versions and also expects a Linux environment. To setup all the required dependencies for training and evaluation, please follow the instructions below:
+
+*[micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)* **(Recommended)** - Clone the repository and then create and activate a `dinov3` conda environment using the provided environment definition:
+
+```shell
+micromamba env create -f conda.yaml
+micromamba activate dinov3
+```
+
+## Data preparation
+你可以在`<MM-DINO>/tasks/segmentation/datasets/__init__.py`里修改数据集路径。
+
+### ISPRS Vaihingen, Potsdam
+
+The Vaihingen root directory of the dataset should hold the following contents:
+
+- optical image path: `<ROOT>/top/top_mosaic_09cm_area{}.tif`
+- label path: `<ROOT>/gts_eroded_for_participants/top_mosaic_09cm_area1_noBoundary.tif`
+- dsm path: `<ROOT>/dsm/dsm_09cm_matching_area1.tif`
+
+你可以从这里下载Vaihingen：[link](https://pan.baidu.com/s/16jtayj82a5PeIEFKxJ9xXg?pwd=gdh4)
+
+The Potsdam root directory of the dataset should hold the following contents:
+
+- optical image path: `<ROOT>/2_Ortho_RGB/top_potsdam_{}_RGB.tif`
+- label path: `<ROOT>/5_Labels_for_participants_no_Boundary/top_potsdam_{}_label_noBoundary.tif`
+- dsm path: `<ROOT>/1_DSM_normalisation/dsm_potsdam_{}_normalized_lastools.jpg`
+
+你可以从这里下载Potsdam：[link](https://pan.baidu.com/s/1Ypf4Fi_k7RaquHx6KuTVvg?pwd=c6dp)
+
+### WHU-OPT-SAR
+
+The WHU-OPT-SAR root directory of the dataset should hold the following contents:
+
+- optical image path: `<ROOT>/optical/{}.tif`
+- label path: `<ROOT>/lbl/{}.tif`
+- sar path: `<ROOT>/sar/{}.tif`
+
+你可以从这里下载WHU-OPT-SAR：[link](https://github.com/AmberHen/WHU-OPT-SAR-dataset)
+
+## Training
+开始训练前，你需要下载dinov3的backbone权重放至对应的路径，你可以在`<MM-DINO>/configs/MMDINO.py`中修改路径。
+
+### Fast setup: training MM-DINO ViT-L/16 on Vaihingen
+
+```shell
+torchrun --nproc_per_node=<GPUs NUM> ./tasks/segmentation/train_multi.py \
+ --model-name DINOv3 \
+ --num-modalities 1 \
+ --dataset-name Vaihingen \
+ --backbone-type dinov3_vitl16
+```
+
+## Evaluation
+
+The training code regularly saves the weights. In order to evaluate the model, run the following evaluation on a single node:
+
+
+### 在WHU-OPT-SAR数据集上进行评估
+
+```shell
+python ./tasks/segmentation/test.py \
+ --model-name DINOv3 \
+ --num-modalities 1 \
+ --dataset-name WHU \
+ --backbone-type dinov3_vits16 \
+ --checkpoint-path <CHECKPOINT_PATH>
+```
+
+作业完成后，控制台会输出评估结果。另外，您可在指定的输出路径目录中找到可视化结果。
+- `<MM-DINO>/vis_results` 其中包含评估的可视化结果以及混淆矩阵;
+
+## Acknowledgment
+Our implementation is mainly based on following repositories. Thanks for their good works.
+* [DINOv3](https://github.com/facebookresearch/dinov3)
+
+## Citing MM-DINO
+
+If you find this repository useful, please consider giving a star :star: and citation :t-rex::
+
+```
+
+```
