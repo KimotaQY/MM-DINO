@@ -182,7 +182,7 @@ micromamba activate dinov3
 ```
 
 ## Data preparation
-你可以在`<MM-DINO>/tasks/segmentation/datasets/__init__.py`里修改数据集路径。
+You can modify the dataset paths in <MM-DINO>/tasks/segmentation/datasets/__init__.py.
 
 ### ISPRS Vaihingen, Potsdam
 
@@ -192,7 +192,7 @@ The Vaihingen root directory of the dataset should hold the following contents:
 - label path: `<ROOT>/gts_eroded_for_participants/top_mosaic_09cm_area1_noBoundary.tif`
 - dsm path: `<ROOT>/dsm/dsm_09cm_matching_area1.tif`
 
-你可以从这里下载Vaihingen：[link](https://pan.baidu.com/s/16jtayj82a5PeIEFKxJ9xXg?pwd=gdh4)
+You can download Vaihingen from here: [link](https://pan.baidu.com/s/16jtayj82a5PeIEFKxJ9xXg?pwd=gdh4)
 
 The Potsdam root directory of the dataset should hold the following contents:
 
@@ -200,7 +200,7 @@ The Potsdam root directory of the dataset should hold the following contents:
 - label path: `<ROOT>/5_Labels_for_participants_no_Boundary/top_potsdam_{}_label_noBoundary.tif`
 - dsm path: `<ROOT>/1_DSM_normalisation/dsm_potsdam_{}_normalized_lastools.jpg`
 
-你可以从这里下载Potsdam：[link](https://pan.baidu.com/s/1Ypf4Fi_k7RaquHx6KuTVvg?pwd=c6dp)
+You can download Potsdam from here: [link](https://pan.baidu.com/s/1Ypf4Fi_k7RaquHx6KuTVvg?pwd=c6dp)
 
 ### WHU-OPT-SAR
 
@@ -210,10 +210,10 @@ The WHU-OPT-SAR root directory of the dataset should hold the following contents
 - label path: `<ROOT>/lbl/{}.tif`
 - sar path: `<ROOT>/sar/{}.tif`
 
-你可以从这里下载WHU-OPT-SAR：[link](https://github.com/AmberHen/WHU-OPT-SAR-dataset)
+You can download WHU-OPT-SAR from here: [link](https://github.com/AmberHen/WHU-OPT-SAR-dataset)
 
 ## Training
-开始训练前，你需要下载dinov3的backbone权重放至对应的路径，你可以在`<MM-DINO>/configs/MMDINO.py`中修改路径。
+Before starting training, you need to download the DINOv3 backbone weights and place them in the corresponding path. You can modify the path in`<MM-DINO>/configs/MMDINO.py`.
 
 ### Fast setup: training MM-DINO ViT-L/16 on Vaihingen
 
@@ -230,7 +230,7 @@ torchrun --nproc_per_node=<GPUs NUM> ./tasks/segmentation/train_multi.py \
 The training code regularly saves the weights. In order to evaluate the model, run the following evaluation on a single node:
 
 
-### 在WHU-OPT-SAR数据集上进行评估
+### Evaluate on WHU-OPT-SAR dataset
 
 ```shell
 python ./tasks/segmentation/test.py \
@@ -241,8 +241,8 @@ python ./tasks/segmentation/test.py \
  --checkpoint-path <CHECKPOINT_PATH>
 ```
 
-作业完成后，控制台会输出评估结果。另外，您可在指定的输出路径目录中找到可视化结果。
-- `<MM-DINO>/vis_results` 其中包含评估的可视化结果以及混淆矩阵;
+After the job is completed, the console will output the evaluation results. Additionally, you can find the visualization results in the specified output directory.
+- `<MM-DINO>/vis_results` Contains visualization results and confusion matrix from the evaluation;
 
 ## Acknowledgment
 Our implementation is mainly based on following repositories. Thanks for their good works.
