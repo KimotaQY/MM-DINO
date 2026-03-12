@@ -263,7 +263,6 @@ def metrics_print_version(predictions, gts, label_values):
 
     print("Confusion matrix :")
     print(cm)
-
     # Compute global accuracy
     total = sum(sum(cm))
     accuracy = sum([cm[x][x] for x in range(len(cm))])
@@ -284,14 +283,25 @@ def metrics_print_version(predictions, gts, label_values):
         except:
             # Ignore exception if there is no element in class i for test set
             pass
-    print("F1Score :")
-    for l_id, score in enumerate(F1Score):
-        print("%s: %.4f" % (label_values[l_id], score))
+    print("F1Score / IoU:")
+    # Compute MIoU coefficient
+    MIoU = np.diag(cm) / (np.sum(cm, axis=1) + np.sum(cm, axis=0) -
+                          np.diag(cm))
+    for l_id, (f1_score, iou_score) in enumerate(zip(F1Score, MIoU)):
+        print("%s: %.2f / %.2f" %
+              (label_values[l_id], f1_score * 100, iou_score * 100))
     if "undefined" in label_values or "clutter" in label_values:
         F1Score = np.nanmean(F1Score[:(len(label_values) - 1)])
     else:
         F1Score = np.nanmean(F1Score[:(len(label_values))])
+    print("---")
     print('mean F1Score: %.4f' % (F1Score))
+    print("---")
+    if "undefined" in label_values or "clutter" in label_values:
+        MIoU = np.nanmean(MIoU[:(len(label_values) - 1)])
+    else:
+        MIoU = np.nanmean(MIoU[:(len(label_values))])
+    print('mean MIoU: %.4f' % (MIoU))
     print("---")
 
     # Compute kappa coefficient
@@ -300,19 +310,5 @@ def metrics_print_version(predictions, gts, label_values):
     pe = np.sum(np.sum(cm, axis=0) * np.sum(cm, axis=1)) / float(total * total)
     kappa = (pa - pe) / (1 - pe)
     print("Kappa: %.4f" % (kappa))
-
-    # Compute MIoU coefficient
-    MIoU = np.diag(cm) / (np.sum(cm, axis=1) + np.sum(cm, axis=0) -
-                          np.diag(cm))
-    print(MIoU)
-    print("MIoU: ")
-    for l_id, score in enumerate(MIoU):
-        print("%s: %.4f" % (label_values[l_id], score))
-    if "undefined" in label_values or "clutter" in label_values:
-        MIoU = np.nanmean(MIoU[:(len(label_values) - 1)])
-    else:
-        MIoU = np.nanmean(MIoU[:(len(label_values))])
-    print('mean MIoU: %.4f' % (MIoU))
-    print("---")
 
     return MIoU, F1Score, kappa, accuracy, cm
