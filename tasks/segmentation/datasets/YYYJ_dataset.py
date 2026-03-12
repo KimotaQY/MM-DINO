@@ -31,7 +31,8 @@ palette = {
     11: (128, 78, 191),  # 中等深度的紫色
     12: (188, 155, 218),  # 浅薰衣草紫
     13: (220, 60, 60),  # 鲜红色
-    14: (255, 255, 255)  # 白色
+    14: (255, 255, 255),  # 白色
+    15: (0, 0, 0),
 }
 
 invert_palette = {v: k for k, v in palette.items()}
@@ -118,7 +119,7 @@ class YYYJ_Dataset(torch.utils.data.Dataset):
                                        fill=(0, 0, 0))
                 label = ImageOps.expand(label,
                                         border=(0, 0, pad_width, pad_height),
-                                        fill=(255, 255, 255))
+                                        fill=(0, 0, 0))
 
             # Get a random patch
             x1, x2, y1, y2 = self.get_random_pos(data, self.window_size)
@@ -131,10 +132,10 @@ class YYYJ_Dataset(torch.utils.data.Dataset):
                 label = label.crop((y1, x1, y2, x2))
 
             # 弱增强
-            # data, label = resize(data, label, (0.5, 2.0))
-            # data, label = crop(data, label, self.window_size[0])
-            data, label = hflip(data, label, p=0.5)
-            data, label = vflip(data, label, p=0.5)
+            data, label, _ = resize(data, label, None, (0.5, 2.0))
+            data, label, _ = crop(data, label, None, self.window_size[0])
+            data, label, _ = hflip(data, label, None, p=0.5)
+            data, label, _ = vflip(data, label, None, p=0.5)
             # data, label = rotate(data, label, p=0.5)
 
             # data = color_jitter(data, p=0.8)
@@ -163,7 +164,7 @@ class YYYJ_Dataset(torch.utils.data.Dataset):
                                        fill=(0, 0, 0))
                 label = ImageOps.expand(label,
                                         border=(0, 0, pad_width, pad_height),
-                                        fill=(255, 255, 255))
+                                        fill=(0, 0, 0))
 
             label_arr = np.array(label)
             label = np.asarray(self.convert_from_color(label_arr),
