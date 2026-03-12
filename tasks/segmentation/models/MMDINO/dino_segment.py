@@ -323,9 +323,6 @@ class ResNetSegmentModule(nn.Module):
         # 主输入x
         x = modalities[0]
         _, C, H, W = x.shape
-        patch_h, patch_w = x.shape[-2] // 16, x.shape[-1] // 16
-
-        scale_factors = [4, 2, 1, 0.5]
 
         if len(modalities) == 1:
             outputs = self.backbone(x)
@@ -338,38 +335,11 @@ class ResNetSegmentModule(nn.Module):
                 if modality_input.shape[1] != C and idx > 0:
                     modality_input = modality_input.repeat(1, C, 1, 1)
 
-                outputs_modality = self.backbone.get_intermediate_layers(
-                    modality_input,
-                    n=BACKBONE_INTERMEDIATE_LAYERS["dinov3_vitl16"])
+                outputs_modality = self.backbone(modality_input)
                 outputs_modalities.append(outputs_modality)
 
-            if self.adapter is not None:
-                # 使用适配器处理多尺度特征
-                processed_outputs_modalities = self.adapter(
-                    *outputs_modalities, patch_h=patch_h, patch_w=patch_w)
-            else:
-                processed_outputs_modalities = []
-                for outputs_modality in outputs_modalities:
-                    # 直接处理中间层输出
-                    processed_outputs_modality = []
-                    for i, output in enumerate(outputs_modality):
-                        output = output.permute(0, 2, 1).reshape(
-                            (output.shape[0], output.shape[-1], patch_h,
-                             patch_w))
-
-                        if i < len(scale_factors):
-                            output = F.interpolate(
-                                output,
-                                scale_factor=scale_factors[i],
-                                mode="bilinear",
-                                align_corners=False)
-                        processed_outputs_modality.append(output)
-
-                    processed_outputs_modalities.append(
-                        processed_outputs_modality)
-
             # 将处理后的所有模态特征传递给解码器
-            logits = self.decoder(*processed_outputs_modalities)
+            logits = self.decoder(*outputs_modalities)
 
         _H, _W = logits.shape[2:]
         if _H != H or _W != W:
