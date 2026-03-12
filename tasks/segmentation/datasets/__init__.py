@@ -8,14 +8,14 @@ from configs.common_cfg import MS_ROOT_DIR
 
 
 def build_dataset(dataset_name, data_type="test", **kwargs):
-    # model_name = kwargs.get("model_name")
-    # if model_name in ['DINOv3', 'SegDINO', 'Mask2Former']:
-    #     normalize_type = "geo"
-    # elif model_name in ['']:
-    #     normalize_type = None
-    # else:
-    #     normalize_type = "common"
-    normalize_type = "common"
+    model_name = kwargs.get("model_name")
+    backbone_type = kwargs.get("backbone_type")
+    if model_name == "DINOv3" and backbone_type in [
+            "dinov3_vitl16", "dinov3_vit7b16"
+    ]:
+        normalize_type = "geo"
+    else:
+        normalize_type = "common"
 
     if dataset_name == "Potsdam":
         ids = ['4_10', '5_11', '2_11', '3_10', '6_11', '7_12'

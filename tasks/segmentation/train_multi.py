@@ -93,7 +93,9 @@ def main(**kwargs):
         "train",
         window_size=window_size,
         model_name=MODEL_NAME,
-        modality="multi" if NUM_MODALITIES > 1 else None)
+        modality="multi" if NUM_MODALITIES > 1 else None,
+        backbone_type=kwargs.get('backbone_type'),
+    )
 
     # 根据分布式训练设置调整采样器
     if distributed.is_enabled():
@@ -119,7 +121,9 @@ def main(**kwargs):
         "test",
         window_size=window_size,
         model_name=MODEL_NAME,
-        modality="multi" if NUM_MODALITIES > 1 else None)
+        modality="multi" if NUM_MODALITIES > 1 else None,
+        backbone_type=kwargs.get('backbone_type'),
+    )
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1)
 
     # 将模型移到GPU
