@@ -156,25 +156,20 @@ class DINOSegmentModule(nn.Module):
 
         if len(modalities) == 1:
             if self.adapter is not None:
-                with torch.autocast("cuda", torch.float32):
-                    outputs = self.backbone.get_intermediate_layers(
-                        x, n=BACKBONE_INTERMEDIATE_LAYERS[self.backbone_type])
+                outputs = self.backbone.get_intermediate_layers(
+                    x, n=BACKBONE_INTERMEDIATE_LAYERS[self.backbone_type])
                 # 使用适配器处理多尺度特征
                 multi_scale_features = self.adapter(outputs,
                                                     patch_h=patch_h,
                                                     patch_w=patch_w)
             else:
-                with torch.autocast("cuda", torch.float32):
-                    outputs = self.backbone.get_intermediate_layers(
-                        x,
-                        n=BACKBONE_INTERMEDIATE_LAYERS[self.backbone_type],
-                        reshape=True)
+                outputs = self.backbone.get_intermediate_layers(
+                    x,
+                    n=BACKBONE_INTERMEDIATE_LAYERS[self.backbone_type],
+                    reshape=True)
                 # 直接处理中间层输出
                 multi_scale_features = []
                 for i, output in enumerate(outputs):
-                    # output = output.permute(0, 2, 1).reshape(
-                    #     (output.shape[0], output.shape[-1], patch_h, patch_w))
-
                     if i < len(scale_factors):
                         output = F.interpolate(output,
                                                scale_factor=scale_factors[i],
