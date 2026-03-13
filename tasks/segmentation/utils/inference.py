@@ -176,11 +176,9 @@ def slide_inference(inputs: torch.Tensor,
                                        mask_pred.to(torch.float))
 
         # 将结果添加到最终预测图中
+        batch_preds = batch_preds.to(inputs.device)
         for j, (y1, y2, x1, x2) in enumerate(batch_coords):
-            crop_pred = batch_preds[j:j + 1]  # 保持批次维度
-            preds += F.pad(crop_pred,
-                           (int(x1), int(preds.shape[-1] - x2), int(y1),
-                            int(preds.shape[-2] - y2))).to(inputs.device)
+            preds[:, :, y1:y2, x1:x2] += batch_preds[j]
             count_mat[:, :, y1:y2, x1:x2] += 1
 
     # Optional buffer to ensure each gpu does the same number of operations for sharded models
