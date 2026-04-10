@@ -124,7 +124,18 @@ def main(**kwargs):
         modality="multi" if NUM_MODALITIES > 1 else None,
         backbone_type=kwargs.get('backbone_type'),
     )
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1)
+
+    if distributed.is_enabled():
+        test_sampler = torch.utils.data.distributed.DistributedSampler(
+            test_dataset, shuffle=False)
+    else:
+        test_sampler = None
+
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=1,
+                                              sampler=test_sampler,
+                                              num_workers=1,
+                                              persistent_workers=True)
 
     # 将模型移到GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -291,46 +302,58 @@ def train(model,
 
         # 每隔{save_interval}个epoch保存一次模型
         save_interval = 5
-        if e % save_interval == 0 and distributed.is_main_process():
-            test_metrics = test(model, test_loader, cfg=cfg)
+        if e % save_interval == 0:
+            # 在所有进程间设置屏障,确保同步
+            if distributed.is_enabled():
+                torch.distributed.barrier()
 
-            if isinstance(test_metrics, dict):
-                mIoU = test_metrics.get('MIoU', 0.0)
+            test_metrics = test(model,
+                                test_loader,
+                                cfg=cfg,
+                                is_distributed=distributed.is_enabled())
 
-            if mIoU > best_IoU:
-                best_IoU = mIoU
-                # 保存模型时考虑分布式包装
-                model_state = model.module.state_dict() if hasattr(
-                    model, 'module') else model.state_dict()
-                torch.save({
-                    "model": model_state
-                }, f"{save_dir}/{MODEL_NAME}_{DATASET_NAME}_e{e}_mIoU{round(mIoU*100, 2)}.pth"
-                           )
+            if distributed.is_main_process():
+                if isinstance(test_metrics, dict):
+                    mIoU = test_metrics.get('MIoU', 0.0)
 
-            # 记录测试指标到JSON文件
-            if test_metrics_file is not None and isinstance(
-                    test_metrics, dict):
-                test_record = test_metrics.copy()
-                test_record["epoch"] = e
+                if mIoU > best_IoU:
+                    best_IoU = mIoU
+                    # 保存模型时考虑分布式包装
+                    model_state = model.module.state_dict() if hasattr(
+                        model, 'module') else model.state_dict()
+                    torch.save({
+                        "model": model_state
+                    }, f"{save_dir}/{MODEL_NAME}_{DATASET_NAME}_e{e}_mIoU{round(mIoU*100, 2)}.pth"
+                               )
 
-                # 添加逗号（如果不是第一条记录）
-                with open(test_metrics_file, 'a') as f:
-                    if e > save_interval:  # 第一条记录是第{save_interval}个epoch
-                        f.write(",\n")
-                    json.dump(test_record, f, indent=2)
+                # 记录测试指标到JSON文件
+                if test_metrics_file is not None and isinstance(
+                        test_metrics, dict):
+                    test_record = test_metrics.copy()
+                    test_record["epoch"] = e
 
-            # 清理多余的 .pth 文件
-            if save_dir is not None:
-                model_files = [
-                    f for f in os.listdir(save_dir) if f.endswith(".pth")
-                ]
-                if len(model_files) > 5:  # 设置最大保留的模型数量
-                    # 按文件创建时间排序，保留最新的 5 个模型
-                    model_files.sort(key=lambda x: os.path.getmtime(
-                        os.path.join(save_dir, x)))
-                    for file_name in model_files[:-5]:
-                        os.remove(os.path.join(save_dir, file_name))
-                        print(f"Deleted old model: {file_name}")
+                    # 添加逗号（如果不是第一条记录）
+                    with open(test_metrics_file, 'a') as f:
+                        if e > save_interval:  # 第一条记录是第{save_interval}个epoch
+                            f.write(",\n")
+                        json.dump(test_record, f, indent=2)
+
+                # 清理多余的 .pth 文件
+                if save_dir is not None:
+                    model_files = [
+                        f for f in os.listdir(save_dir) if f.endswith(".pth")
+                    ]
+                    if len(model_files) > 5:  # 设置最大保留的模型数量
+                        # 按文件创建时间排序，保留最新的 5 个模型
+                        model_files.sort(key=lambda x: os.path.getmtime(
+                            os.path.join(save_dir, x)))
+                        for file_name in model_files[:-5]:
+                            os.remove(os.path.join(save_dir, file_name))
+                            print(f"Deleted old model: {file_name}")
+
+            # 再次设置屏障,确保所有进程等待主进程完成保存
+            if distributed.is_enabled():
+                torch.distributed.barrier()
 
         # 保存检查点
         if save_dir is not None and distributed.is_main_process():
@@ -359,7 +382,7 @@ def train(model,
                 f.write("\n]")
 
 
-def test(model, test_loader, cfg):
+def test(model, test_loader, cfg, is_distributed=False):
     # 清理缓存
     torch.cuda.empty_cache()
     # 确定设备
@@ -404,9 +427,81 @@ def test(model, test_loader, cfg):
         preds.append(pred)
         labels.append(label)
 
-    MIoU, F1, Kappa, Acc = metrics(
-        np.concatenate([p.ravel() for p in preds]),
-        np.concatenate([p.ravel() for p in labels]).ravel(), classes)
+    # 如果是分布式训练，需要收集所有进程的预测结果
+    if is_distributed:
+        # 将当前进程的preds和labels转换为tensor并填充到相同长度
+        local_preds = np.concatenate([p.ravel() for p in preds
+                                      ]) if preds else np.array([])
+        local_labels = np.concatenate([p.ravel() for p in labels
+                                       ]) if labels else np.array([])
+
+        # 获取所有进程的数据大小
+        local_size = torch.tensor([len(local_preds)],
+                                  device=device,
+                                  dtype=torch.long)
+        all_sizes = [
+            torch.zeros_like(local_size)
+            for _ in range(distributed.get_world_size())
+        ]
+        torch.distributed.all_gather(all_sizes, local_size)
+
+        max_size = max(size.item() for size in all_sizes)
+
+        # 填充到最大长度
+        padded_preds = np.zeros(max_size, dtype=local_preds.dtype)
+        padded_labels = np.zeros(max_size, dtype=local_labels.dtype)
+        padded_preds[:len(local_preds)] = local_preds
+        padded_labels[:len(local_labels)] = local_labels
+
+        # 转换为tensor
+        preds_tensor = torch.from_numpy(padded_preds).to(device)
+        labels_tensor = torch.from_numpy(padded_labels).to(device)
+
+        # 收集所有进程的结果
+        all_preds_list = [
+            torch.zeros_like(preds_tensor)
+            for _ in range(distributed.get_world_size())
+        ]
+        all_labels_list = [
+            torch.zeros_like(labels_tensor)
+            for _ in range(distributed.get_world_size())
+        ]
+
+        torch.distributed.all_gather(all_preds_list, preds_tensor)
+        torch.distributed.all_gather(all_labels_list, labels_tensor)
+
+        # 合并并去除填充部分
+        all_preds = []
+        all_labels = []
+        for i, size in enumerate(all_sizes):
+            actual_size = size.item()
+            if actual_size > 0:
+                all_preds.append(all_preds_list[i][:actual_size].cpu().numpy())
+                all_labels.append(
+                    all_labels_list[i][:actual_size].cpu().numpy())
+
+        if all_preds:
+            all_preds = np.concatenate(all_preds)
+            all_labels = np.concatenate(all_labels)
+        else:
+            all_preds = np.array([])
+            all_labels = np.array([])
+
+        # 只在主进程计算指标
+        if distributed.is_main_process():
+            MIoU, F1, Kappa, Acc = metrics(all_preds, all_labels, classes)
+        else:
+            MIoU, F1, Kappa, Acc = 0.0, 0.0, 0.0, 0.0
+
+        # 将指标广播到所有进程
+        metrics_tensor = torch.tensor([MIoU, F1, Kappa, Acc], device=device)
+        torch.distributed.broadcast(metrics_tensor, src=0)
+        MIoU, F1, Kappa, Acc = metrics_tensor.tolist()
+    else:
+        # 非分布式情况，直接计算
+        MIoU, F1, Kappa, Acc = metrics(
+            np.concatenate([p.ravel() for p in preds]),
+            np.concatenate([p.ravel() for p in labels]).ravel(), classes)
 
     # 构建详细指标字典，并转换为Python原生类型以支持JSON序列化
     detailed_metrics = {

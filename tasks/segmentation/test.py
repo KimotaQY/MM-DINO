@@ -62,7 +62,16 @@ def main(**kwargs):
         modality="multi" if NUM_MODALITIES > 1 else None,
         backbone_type=kwargs.get('backbone_type'),
     )
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1)
+
+    if distributed.is_enabled():
+        test_sampler = torch.utils.data.distributed.DistributedSampler(
+            test_dataset, shuffle=False)
+    else:
+        test_sampler = None
+
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=1,
+                                              sampler=test_sampler)
 
     # 将模型移到GPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -81,10 +90,10 @@ def main(**kwargs):
             find_unused_parameters=True,  # 这将允许模型在某些参数未参与损失计算时仍能正常工作
         )
 
-    test(model, test_loader, cfg)
+    test(model, test_loader, cfg, is_distributed=distributed.is_enabled())
 
 
-def test(model, test_loader, cfg):
+def test(model, test_loader, cfg, is_distributed=False):
     # 清理缓存
     torch.cuda.empty_cache()
     # 确定设备
@@ -143,9 +152,87 @@ def test(model, test_loader, cfg):
                                  dataset_name=DATASET_NAME)
         sample_index += 1
 
-    MIoU, F1, Kappa, Acc, cm = metrics(
-        np.concatenate([p.ravel() for p in preds]),
-        np.concatenate([p.ravel() for p in labels]).ravel(), classes)
+    # 如果是分布式训练，需要收集所有进程的预测结果
+    if is_distributed:
+        # 将当前进程的preds和labels转换为tensor并填充到相同长度
+        local_preds = np.concatenate([p.ravel() for p in preds
+                                      ]) if preds else np.array([])
+        local_labels = np.concatenate([p.ravel() for p in labels
+                                       ]) if labels else np.array([])
+
+        # 获取所有进程的数据大小
+        local_size = torch.tensor([len(local_preds)],
+                                  device=device,
+                                  dtype=torch.long)
+        all_sizes = [
+            torch.zeros_like(local_size)
+            for _ in range(distributed.get_world_size())
+        ]
+        torch.distributed.all_gather(all_sizes, local_size)
+
+        max_size = max(size.item() for size in all_sizes)
+
+        # 填充到最大长度
+        padded_preds = np.zeros(max_size, dtype=local_preds.dtype)
+        padded_labels = np.zeros(max_size, dtype=local_labels.dtype)
+        padded_preds[:len(local_preds)] = local_preds
+        padded_labels[:len(local_labels)] = local_labels
+
+        # 转换为tensor
+        preds_tensor = torch.from_numpy(padded_preds).to(device)
+        labels_tensor = torch.from_numpy(padded_labels).to(device)
+
+        # 收集所有进程的结果
+        all_preds_list = [
+            torch.zeros_like(preds_tensor)
+            for _ in range(distributed.get_world_size())
+        ]
+        all_labels_list = [
+            torch.zeros_like(labels_tensor)
+            for _ in range(distributed.get_world_size())
+        ]
+
+        torch.distributed.all_gather(all_preds_list, preds_tensor)
+        torch.distributed.all_gather(all_labels_list, labels_tensor)
+
+        # 合并并去除填充部分
+        all_preds = []
+        all_labels = []
+        for i, size in enumerate(all_sizes):
+            actual_size = size.item()
+            if actual_size > 0:
+                all_preds.append(all_preds_list[i][:actual_size].cpu().numpy())
+                all_labels.append(
+                    all_labels_list[i][:actual_size].cpu().numpy())
+
+        if all_preds:
+            all_preds = np.concatenate(all_preds)
+            all_labels = np.concatenate(all_labels)
+        else:
+            all_preds = np.array([])
+            all_labels = np.array([])
+
+        # 只在主进程计算指标
+        if distributed.is_main_process():
+            MIoU, F1, Kappa, Acc, cm = metrics(all_preds, all_labels, classes)
+        else:
+            MIoU, F1, Kappa, Acc = 0.0, 0.0, 0.0, 0.0
+            cm = np.zeros((len(classes), len(classes)), dtype=np.int64)
+
+        # 将标量指标转换为tensor并广播
+        scalar_metrics = torch.tensor([MIoU, F1, Kappa, Acc], device=device)
+        torch.distributed.broadcast(scalar_metrics, src=0)
+        MIoU, F1, Kappa, Acc = scalar_metrics.tolist()
+
+        # 将混淆矩阵转换为tensor并广播
+        cm_tensor = torch.from_numpy(cm).to(device)
+        torch.distributed.broadcast(cm_tensor, src=0)
+        cm = cm_tensor.cpu().numpy()
+    else:
+        # 非分布式情况，直接计算
+        MIoU, F1, Kappa, Acc, cm = metrics(
+            np.concatenate([p.ravel() for p in preds]),
+            np.concatenate([p.ravel() for p in labels]).ravel(), classes)
 
     plot_confusion_matrix(cm, classes[:-1],
                           os.path.join(save_dir, "confusion_matrix.png"))
