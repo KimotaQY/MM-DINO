@@ -130,16 +130,30 @@ ViT models pretrained on satellite dataset (SAT-493M):
     <tr>
       <td>MM-DINO ViT-L/16</td>
       <td align="right">Uni</td>
-      <td align="right">-</td>
+      <td align="right">86.26%</td>
       <td align="center">Potsdam</td>
-      <td align="center"><a href="">[Baidu Cloud]</a></td>
+      <td align="center"><a href="https://pan.baidu.com/s/16OsA4nQ-ndVoD3e7gt5wHw?pwd=2x9e">[Baidu Cloud]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-L/16 LoRA</td>
+      <td align="right">Uni</td>
+      <td align="right">86.67%</td>
+      <td align="center">Potsdam</td>
+      <td align="center"><a href="https://pan.baidu.com/s/16OsA4nQ-ndVoD3e7gt5wHw?pwd=2x9e">[Baidu Cloud]</a></td>
     </tr>
     <tr>
       <td>MM-DINO ViT-L/16</td>
       <td align="right">Multi</td>
-      <td align="right">-</td>
+      <td align="right">86.05%</td>
       <td align="center">Potsdam</td>
-      <td align="center"><a href="">[Baidu Cloud]</a></td>
+      <td align="center"><a href="https://pan.baidu.com/s/16OsA4nQ-ndVoD3e7gt5wHw?pwd=2x9e">[Baidu Cloud]</a></td>
+    </tr>
+    <tr>
+      <td>MM-DINO ViT-L/16 LoRA</td>
+      <td align="right">Multi</td>
+      <td align="right">86.63%</td>
+      <td align="center">Potsdam</td>
+      <td align="center"><a href="https://pan.baidu.com/s/16OsA4nQ-ndVoD3e7gt5wHw?pwd=2x9e">[Baidu Cloud]</a></td>
     </tr>
     <tr>
       <td>MM-DINO ViT-S/16</td>
